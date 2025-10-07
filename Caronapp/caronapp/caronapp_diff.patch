@@ -1,0 +1,71 @@
+diff --git a/Caronapp/caronapp/lib/main.dart b/Caronapp/caronapp/lib/main.dart
+index 7b7f5b6..6d7304f 100644
+--- a/Caronapp/caronapp/lib/main.dart
++++ b/Caronapp/caronapp/lib/main.dart
+@@ -1,36 +1,22 @@
++
+ import 'package:flutter/material.dart';
++import 'core/theme/app_theme.dart';
++import 'features/intro/intro_screen.dart';
+ 
+ void main() {
+-  runApp(const MyApp());
++  runApp(const Caronapp());
+ }
+ 
+-class MyApp extends StatelessWidget {
+-  const MyApp({super.key});
++class Caronapp extends StatelessWidget {
++  const Caronapp({super.key});
+ 
+-  // This widget is the root of your application.
+   @override
+   Widget build(BuildContext context) {
+     return MaterialApp(
+-      title: 'Flutter Demo',
+-      theme: ThemeData(
+-        // This is the theme of your application.
+-        //
+-        // TRY THIS: Try running your application with "flutter run". You'll see
+-        // the application has a purple toolbar. Then, without quitting the app,
+-        // try changing the seedColor in the colorScheme below to Colors.green
+-        // and then invoke "hot reload" (save your changes or press the "hot
+-        // reload" button in a Flutter-supported IDE, or press "r" if you used
+-        // the command line to start the app).
+-        //
+-        // Notice that the counter didn't reset back to zero; the application
+-        // state is not lost during the reload. To reset the state, use hot
+-        // restart instead.
+-        //
+-        // This works for code too, not just values: Most code changes can be
+-        // tested with just a hot reload.
+-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+-      ),
+-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
++      title: 'Caronapp',
++      debugShowCheckedModeBanner: false,
++      theme: AppTheme.theme,
++      home: const IntroScreen(),
+     );
+   }
+ }
+diff --git a/Caronapp/caronapp/pubspec.yaml b/Caronapp/caronapp/pubspec.yaml
+index d05e840..7d8ac17 100644
+--- a/Caronapp/caronapp/pubspec.yaml
++++ b/Caronapp/caronapp/pubspec.yaml
+@@ -57,10 +57,11 @@ flutter:
+   # the material Icons class.
+   uses-material-design: true
+ 
+-  # To add assets to your application, add an assets section, like this:
+-  # assets:
+-  #   - images/a_dot_burr.jpeg
+-  #   - images/a_dot_ham.jpeg
++
++  flutter:
++    uses-material-design: true
++    assets:
++      - assets/logo.png
+ 
+   # An image asset can refer to one or more resolution-specific "variants", see
+   # https://flutter.dev/to/resolution-aware-images
