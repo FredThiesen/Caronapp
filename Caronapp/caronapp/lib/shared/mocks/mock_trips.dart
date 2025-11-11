@@ -1,33 +1,50 @@
 import '../models/trip.dart';
 
-const mockTrips = <Trip>[
+final mockTrips = <Trip>[
+  // NOTE: using placeholder ids and driverIds for local testing
   Trip(
+    id: 'trip-1',
+    driverId: 'driver-1',
     driverName: 'Mariana Souza',
+    driverAvatarUrl: null,
     origin: 'FACCAT',
     destination: 'Centro de Taquara',
     whenLabel: 'Hoje • 19:00',
+    when: DateTime(2025, 1, 1),
     seats: 3,
     note: 'Vou pela Av. Sebastião Amoretti',
   ),
   Trip(
+    id: 'trip-2',
+    driverId: 'driver-2',
     driverName: 'João Pedro',
+    driverAvatarUrl: null,
     origin: 'Igrejinha',
     destination: 'FACCAT',
     whenLabel: 'Hoje • 18:45',
+    when: DateTime(2025, 1, 1),
     seats: 2,
   ),
   Trip(
+    id: 'trip-3',
+    driverId: 'driver-3',
     driverName: 'Ana Clara',
+    driverAvatarUrl: null,
     origin: 'Parobé',
     destination: 'FACCAT',
     whenLabel: 'Amanhã • 07:30',
+    when: DateTime(2025, 1, 2),
     seats: 1,
   ),
   Trip(
+    id: 'trip-4',
+    driverId: 'driver-4',
     driverName: 'Rafa Lima',
+    driverAvatarUrl: null,
     origin: 'FACCAT',
     destination: 'Gravataí (Centro)',
     whenLabel: 'Hoje • 22:00',
+    when: DateTime(2025, 1, 1),
     seats: 2,
     note: 'Saio do bairro Figueiras',
   ),

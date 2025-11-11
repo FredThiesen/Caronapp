@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/models/user.dart';
 import '../../shared/models/trip.dart';
-import '../../shared/mocks/mock_trips.dart';
 import '../../shared/widgets/trip_card.dart';
+import '../../shared/repos/trip_repository.dart';
+
+final _tripRepo = TripRepository();
 
 class HomeScreen extends StatelessWidget {
   final User user;
@@ -55,21 +57,36 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              itemCount: mockTrips.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final t = mockTrips[index];
-                return TripCard(
-                  driverName: t.driverName,
-                  avatarUrl: t.avatarUrl,
-                  origin: t.origin,
-                  destination: t.destination,
-                  whenLabel: t.whenLabel,
-                  seats: t.seats,
-                  note: t.note,
-                  onTap: () {},
+            child: StreamBuilder<List<Trip>>(
+              stream: _tripRepo.watchUpcomingTrips(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Erro: \\${snapshot.error}'));
+                }
+                final trips = snapshot.data ?? [];
+                if (trips.isEmpty) {
+                  return const Center(child: Text('Nenhuma carona disponível'));
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                  itemCount: trips.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final t = trips[index];
+                    return TripCard(
+                      driverName: t.driverName,
+                      avatarUrl: t.driverAvatarUrl,
+                      origin: t.origin,
+                      destination: t.destination,
+                      whenLabel: t.whenLabel,
+                      seats: t.seats,
+                      note: t.note,
+                      onTap: () {},
+                    );
+                  },
                 );
               },
             ),

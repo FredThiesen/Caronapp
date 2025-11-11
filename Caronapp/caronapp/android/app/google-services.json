@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "642631738319",
+    "project_id": "caronapp-48e5c",
+    "storage_bucket": "caronapp-48e5c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:642631738319:android:74ae537e81c6a2db7928ba",
+        "android_client_info": {
+          "package_name": "com.example.caronapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsKwcVOcOTWX4FJqXqUhDW2JWHmsdbDm0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

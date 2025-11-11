@@ -3,8 +3,8 @@ import '../../core/theme/app_colors.dart';
 
 import '../../shared/widgets/app_button.dart';
 import '../../shared/widgets/app_input.dart';
-import '../../shared/mocks/mock_user.dart';
 import '../home/home_screen.dart';
+import '../../services/auth_service.dart';
 
 enum AuthMode { signIn, signUp }
 
@@ -19,11 +19,13 @@ class LoginSheet extends StatefulWidget {
 class _LoginSheetState extends State<LoginSheet> {
   late AuthMode _mode;
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _repeatPasswordController = TextEditingController();
   String? _error;
   bool _loading = false;
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -38,21 +40,45 @@ class _LoginSheetState extends State<LoginSheet> {
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     setState(() {
       _error = null;
       _loading = true;
     });
     if (_formKey.currentState?.validate() ?? false) {
-      // Simula sucesso
-      Future.delayed(const Duration(milliseconds: 600), () {
-        if (!mounted) return;
-        setState(() => _loading = false);
-        Navigator.of(context).pop();
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeScreen(user: mockUser)),
-        );
-      });
+      // Real sign in / sign up using AuthService
+      if (_mode == AuthMode.signIn) {
+        try {
+          final user = await _authService.signIn(_emailController.text.trim(), _passwordController.text);
+          if (!mounted) return;
+          setState(() => _loading = false);
+          if (user != null) {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen(user: user)));
+          } else {
+            setState(() => _error = 'Falha ao autenticar');
+          }
+        } catch (e) {
+          setState(() => _loading = false);
+          setState(() => _error = e.toString());
+        }
+      } else {
+        try {
+          final name = _nameController.text.trim();
+          final user = await _authService.signUp(name, _emailController.text.trim(), _passwordController.text);
+          if (!mounted) return;
+          setState(() => _loading = false);
+          if (user != null) {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen(user: user)));
+          } else {
+            setState(() => _error = 'Falha ao cadastrar');
+          }
+        } catch (e) {
+          setState(() => _loading = false);
+          setState(() => _error = e.toString());
+        }
+      }
     } else {
       setState(() => _loading = false);
     }
@@ -116,6 +142,14 @@ class _LoginSheetState extends State<LoginSheet> {
                 key: _formKey,
                 child: Column(
                   children: [
+                    if (isSignUp)
+                      AppInput(
+                        label: 'Nome',
+                        hint: 'Seu nome completo',
+                        controller: _nameController,
+                        keyboardType: TextInputType.name,
+                        validator: (v) => (v == null || v.isEmpty) ? 'Informe o nome' : null,
+                      ),
                     AppInput(
                       label: 'Email',
                       hint: 'use o institucional',
