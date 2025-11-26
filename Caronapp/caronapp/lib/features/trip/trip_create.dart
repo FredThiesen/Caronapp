@@ -87,14 +87,17 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
       child: Consumer<TripViewModel>(
         builder: (context, vm, _) {
           return Scaffold(
+            backgroundColor: AppColors.white,
             appBar: AppBar(
-              backgroundColor: AppColors.sky,
+              backgroundColor: AppColors.white,
               elevation: 0,
               iconTheme: const IconThemeData(color: AppColors.navy),
               title: Text(
                 'Criar carona',
                 style: const TextStyle(color: AppColors.navy),
               ),
+              // make icons and title visible on white background
+              foregroundColor: AppColors.navy,
             ),
             body: Padding(
               padding: const EdgeInsets.all(16),
@@ -117,29 +120,49 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
                     ),
                     const SizedBox(height: 12),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _pickDateTime,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.navy,
+                              side: BorderSide(color: AppColors.gray300),
+                            ),
                             child: Text(
                               _when == null
                                   ? 'Escolher data e hora'
                                   : '${_when!.day.toString().padLeft(2, '0')}/${_when!.month.toString().padLeft(2, '0')}/${_when!.year} ${_when!.hour.toString().padLeft(2, '0')}:${_when!.minute.toString().padLeft(2, '0')}',
+                              style: const TextStyle(color: AppColors.navy),
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
-                        DropdownButton<int>(
-                          value: _seats,
-                          items: List.generate(6, (i) => i + 1)
-                              .map(
-                                (v) => DropdownMenuItem(
-                                  value: v,
-                                  child: Text('$v'),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) => setState(() => _seats = v ?? 1),
+                        // Seats selector with explanatory label
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Vagas (lugares disponíveis)',
+                              style: TextStyle(
+                                color: AppColors.gray700,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            DropdownButton<int>(
+                              value: _seats,
+                              items: List.generate(6, (i) => i + 1)
+                                  .map(
+                                    (v) => DropdownMenuItem(
+                                      value: v,
+                                      child: Text('$v'),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) => setState(() => _seats = v ?? 1),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -170,7 +193,7 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
                         : ElevatedButton(
                             onPressed: () => _submit(vm),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.orange,
+                              backgroundColor: AppColors.navy,
                               minimumSize: const Size.fromHeight(48),
                             ),
                             child: const Text('Publicar carona'),

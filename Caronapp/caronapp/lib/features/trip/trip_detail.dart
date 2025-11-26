@@ -335,6 +335,22 @@ class TripDetailScreen extends StatelessWidget {
           ],
         ],
       ),
+      bottomNavigationBar:
+          (currentUser != null && currentUser.uid != trip.driverId)
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    backgroundColor: AppColors.orange,
+                  ),
+                  child: const Text('Entrar em contato com o motorista'),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }
