@@ -10,6 +10,8 @@ class Trip {
   final String whenLabel;
   final DateTime when;
   final int seats;
+  final double? price;
+  final List<String> passengers;
   final String? note;
   final bool active;
 
@@ -23,6 +25,8 @@ class Trip {
     required this.whenLabel,
     required this.when,
     required this.seats,
+    this.price,
+    this.passengers = const [],
     this.note,
     this.active = true,
   });
@@ -37,6 +41,10 @@ class Trip {
     whenLabel: map['whenLabel'] as String? ?? '',
     when: (map['when'] as Timestamp).toDate(),
     seats: (map['seats'] as num?)?.toInt() ?? 0,
+    price: (map['price'] is num) ? (map['price'] as num).toDouble() : null,
+    passengers:
+        (map['passengers'] as List<dynamic>?)?.whereType<String>().toList() ??
+        [],
     note: map['note'] as String?,
     active: map['active'] as bool? ?? true,
   );
@@ -50,6 +58,8 @@ class Trip {
     'whenLabel': whenLabel,
     'when': Timestamp.fromDate(when),
     'seats': seats,
+    'price': price,
+    'passengers': passengers,
     'note': note,
     'active': active,
   };

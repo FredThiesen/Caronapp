@@ -9,6 +9,7 @@ class TripCard extends StatelessWidget {
   final String whenLabel;
   final int seats;
   final String? note;
+  final double? price;
   final VoidCallback? onTap;
 
   const TripCard({
@@ -20,6 +21,7 @@ class TripCard extends StatelessWidget {
     required this.whenLabel,
     required this.seats,
     this.note,
+    this.price,
     this.onTap,
   });
 
@@ -71,12 +73,38 @@ class TripCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          whenLabel,
-                          style: const TextStyle(
-                            color: AppColors.gray700,
-                            fontSize: 13,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                whenLabel,
+                                style: const TextStyle(
+                                  color: AppColors.gray700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            if (price != null)
+                              Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.sky.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'R\$ ${price!.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    color: AppColors.navy,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -108,7 +136,7 @@ class TripCard extends StatelessWidget {
                   Column(
                     children: [
                       _TripPoint(color: AppColors.blue),
-                      Container(width: 2, height: 18, color: AppColors.gray300),
+                      Container(width: 3, height: 44, color: AppColors.gray300),
                       _TripPoint(color: AppColors.orange),
                     ],
                   ),
@@ -118,6 +146,14 @@ class TripCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          'Origem',
+                          style: const TextStyle(
+                            color: AppColors.gray700,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
                           origin,
                           style: const TextStyle(
                             color: AppColors.navy,
@@ -126,6 +162,14 @@ class TripCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
+                        Text(
+                          'Destino',
+                          style: const TextStyle(
+                            color: AppColors.gray700,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
                         Text(
                           destination,
                           style: const TextStyle(

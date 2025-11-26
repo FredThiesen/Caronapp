@@ -4,6 +4,10 @@ import '../../shared/models/user.dart';
 import '../../shared/models/trip.dart';
 import '../../shared/widgets/trip_card.dart';
 import '../../shared/repos/trip_repository.dart';
+import '../trip/trip_create.dart';
+import '../trip/trip_detail.dart';
+import '../../services/auth_service.dart';
+import '../intro/intro_screen.dart';
 
 final _tripRepo = TripRepository();
 
@@ -16,7 +20,11 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.gray100,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const TripCreateScreen()));
+        },
         backgroundColor: AppColors.orange,
         child: const Icon(Icons.add, color: Colors.white),
         shape: const CircleBorder(),
@@ -29,26 +37,58 @@ class HomeScreen extends StatelessWidget {
             color: AppColors.amber,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // keep a small bottom padding so the SafeArea + fixed height don't overflow
+                padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+                child: Row(
+                  // center vertically to avoid overflow when system paddings change
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      'Olá, ${user.name}!',
-                      style: const TextStyle(
-                        color: AppColors.navy,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 28,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Olá, ${user.name}!',
+                            style: const TextStyle(
+                              color: AppColors.navy,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 20,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Pronto para compartilhar uma carona hoje?',
+                            style: TextStyle(
+                              color: AppColors.navy.withOpacity(0.85),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Pronto para compartilhar uma carona hoje?',
-                      style: TextStyle(
-                        color: AppColors.navy.withOpacity(0.85),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
+                    // Logout button
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: IconButton(
+                        tooltip: 'Sair',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        icon: const Icon(Icons.logout, color: AppColors.navy),
+                        onPressed: () async {
+                          final auth = AuthService();
+                          await auth.signOut();
+                          if (!Navigator.of(context).mounted) return;
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (_) => const IntroScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -83,8 +123,13 @@ class HomeScreen extends StatelessWidget {
                       destination: t.destination,
                       whenLabel: t.whenLabel,
                       seats: t.seats,
+                      price: t.price,
                       note: t.note,
-                      onTap: () {},
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TripDetailScreen(trip: t),
+                        ),
+                      ),
                     );
                   },
                 );

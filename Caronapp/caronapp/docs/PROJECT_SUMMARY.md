@@ -19,14 +19,12 @@ Estrutura relevante:
 - `lib/features/home/home_screen.dart` — tela Home (mock)
 - `lib/features/home/` — local sugerido para `trip_detail.dart` e `trip_create.dart`
 
-
 ## 2. Objetivos do próximo trabalho
 
 - Substituir os mocks por uma integração com Firebase (Auth + Firestore).
 - Criar telas de detalhe de carona e criação de carona.
 - Definir modelos Dart com `fromMap`/`toMap` e tipos claros.
 - Fornecer regras de segurança Firestore iniciais.
-
 
 ## 3. Modelos propostos (Dart)
 
@@ -62,7 +60,6 @@ class User {
 ```
 
 > Nota: incluir `id` (Firebase uid) é importante para autorizações e queries.
-
 
 ### 3.2 `Trip` — `lib/shared/models/trip.dart`
 
@@ -125,29 +122,29 @@ class Trip {
 
 > Observação: `Timestamp` vem de `cloud_firestore`. Para os mocks locais, mantenha `whenLabel` e `when` compatíveis.
 
-
 ### 3.3 (Opcional) `RideRequest` ou `Booking` — para futuros pedidos
 
 - `id`, `tripId`, `riderId`, `status` (pending/accepted/rejected), `createdAt`.
-
 
 ## 4. Firestore — Coleções e documentos
 
 Sugestão de modelagem simples:
 
 - `users/{userId}`
+
   - name, email, avatarUrl, createdAt
 
 - `trips/{tripId}`
+
   - driverId, driverName, driverAvatarUrl, origin, destination, when (timestamp), whenLabel, seats, note, active
 
 - `trips/{tripId}/requests/{requestId}` (opcional)
   - riderId, message, status, createdAt
 
 Índices sugeridos:
+
 - Order by `when` (asc) para lista de próximas caronas.
 - Queries por `origin`, `destination` podem exigir índices compostos se for filtrado.
-
 
 ## 5. Autenticação (Firebase Auth) — fluxo mínimo
 
@@ -190,7 +187,6 @@ class AuthService {
 }
 ```
 
-
 ## 6. Segurança (exemplo básico de regras Firestore)
 
 ```rules
@@ -214,20 +210,20 @@ service cloud.firestore {
 
 Ajuste conforme as regras de negócio (por exemplo, permitir que passageiros criem requests, etc.).
 
-
 ## 7. Telas a implementar / modificar
 
 - `TripDetailScreen` (`lib/features/trip/trip_detail.dart`)
+
   - Mostra informações da carona (driver, origem, destino, whenLabel, seats, note)
   - Botões: Solicitar vaga (abre modal), Compartilhar, Fechar
 
 - `TripCreateScreen` (`lib/features/trip/trip_create.dart`)
+
   - Formulário com campos: origem, destino, when (DateTime picker), seats (int), note (opcional)
   - Validações (campos obrigatórios, seats > 0)
   - Ao salvar: criar documento em `trips/` com `driverId = currentUser.uid` e `driverName`
 
 - Ajustes no `LoginSheet`: ao criar usuário, pedir `name` (se desejar) e salvar `users/{uid}`.
-
 
 ## 8. Migração do mock para Firestore (passos)
 
@@ -251,14 +247,12 @@ Stream<List<Trip>> watchTrips() {
 }
 ```
 
-
 ## 9. UX / validações importantes
 
 - Inputs com validação (email, senha >= 6).
 - Em criação de carona: validar `when` no futuro, `seats` >= 1.
 - Mostrar loading indicando operações com Firestore.
 - Tratamento de erros do Firebase (e.g. email já em uso).
-
 
 ## 10. Testes e verificação local
 
@@ -268,7 +262,6 @@ Stream<List<Trip>> watchTrips() {
   2. Criar usuário via app (signup), verificar `users/{uid}` no emulator UI.
   3. Criar carona e verificar `trips/`.
   4. Abrir detalhe da carona.
-
 
 ## 11. Arquivos a adicionar (resumo)
 
@@ -280,7 +273,6 @@ Stream<List<Trip>> watchTrips() {
 - `lib/services/auth_service.dart` (Auth helpers)
 - `docs/PROJECT_SUMMARY.md` (este arquivo)
 
-
 ## 12. Próximos passos sugeridos (prioridade)
 
 1. Implementar os modelos (`User`, `Trip`) com `fromMap`/`toMap`.
@@ -289,7 +281,6 @@ Stream<List<Trip>> watchTrips() {
 4. Substituir `mock_trips` pelo stream do repositório (usar `StreamBuilder`).
 5. Criar `TripDetailScreen` e `TripCreateScreen` básicos.
 6. Adotar Firebase Emulator para testes.
-
 
 ---
 
@@ -300,16 +291,20 @@ Se quiser, já implemento os próximos passos 1 e 2 (modelos + inicialização F
 Execução solicitada: A -> B -> C (modelos, integração Firebase/Auth, telas TripDetail/TripCreate). Abaixo o que eu implementei neste commit local:
 
 - Modelos atualizados/criados:
+
   - `lib/shared/models/user.dart` — agora com `id`, `fromMap`/`toMap` (usa `Timestamp`/`cloud_firestore`).
   - `lib/shared/models/trip.dart` — agora com `id`, `driverId`, `when` (`DateTime`), `fromMap`/`toMap`.
 
 - Repositório:
+
   - `lib/shared/repos/trip_repository.dart` — `watchUpcomingTrips()`, `createTrip()` e `getTrip()` (Firestore).
 
 - Serviços:
+
   - `lib/services/auth_service.dart` — helpers `signIn`, `signUp`, `signOut`, `currentUserFromAuth` (Firebase Auth + Firestore user doc).
 
 - Inicialização Firebase:
+
   - `lib/main.dart` atualizado para `WidgetsFlutterBinding.ensureInitialized()` e `await Firebase.initializeApp()`.
   - `pubspec.yaml` atualizado com dependências: `firebase_core`, `firebase_auth`, `cloud_firestore`.
 
@@ -318,58 +313,122 @@ Execução solicitada: A -> B -> C (modelos, integração Firebase/Auth, telas T
   - `lib/features/trip/trip_create.dart` — formulário de criação de carona (origem/destino/data/hora/vagas).
 
 Notas importantes:
-- As implementações usam `package:cloud_firestore` e `package:firebase_auth` — execute `flutter pub get` localmente para baixar dependências.
-- Recomendo usar o Firebase Emulator Suite durante o desenvolvimento para evitar custos e facilitar testes locais.
 
-Próximos passos (opcional que eu executo automaticamente):
-1. Substituir `mock_trips.dart` pelo `TripRepository.watchUpcomingTrips()` no `HomeScreen` (usar `StreamBuilder`).
-2. Atualizar `LoginSheet` para usar `AuthService` (signIn/signUp) e navegar para `HomeScreen` com `User` real ao invés do mock.
-3. Implementar criação de carona em `TripCreateScreen` chamando `TripRepository.createTrip()` e enviando `driverId` = auth.uid.
+# Caronapp — Resumo do projeto (estado atual)
 
-Se quiser que eu continue e faça esses passos agora, confirme e eu sigo com as atualizações (posso ativar o `StreamBuilder` na `HomeScreen` e conectar o `LoginSheet` ao `AuthService`).
+Este documento descreve o estado atual do projeto Caronapp (Flutter), o mapeamento de dados, o que já está implementado e as pendências recomendadas para desenvolvimento. Removi a seção de testes conforme solicitado.
 
-## Mudanças aplicadas (A -> B -> C)
+---
 
-Implementei em sequência as três etapas solicitadas — modelos (A), integração Firebase (B) e telas (C) — e atualizei o código para usar Firestore/Auth onde aplicável. Principais pontos:
+## 1. Visão geral do repositório
 
-- `HomeScreen` agora consome `TripRepository.watchUpcomingTrips()` via `StreamBuilder` (arquivo: `lib/features/home/home_screen.dart`). Isso substitui o uso direto de `mock_trips` e exibe dados vindos do Firestore/emulator.
-- `LoginSheet` foi integrado ao `AuthService` (arquivo: `lib/features/auth/login_sheet.dart`). O sheet agora suporta signup com `name` e realiza `signIn`/`signUp` reais. Ao autenticar, o app navega para `HomeScreen` com o `User` retornado do Firestore.
-- `TripCreateScreen._submit()` grava um documento em `trips/` usando `TripRepository.createTripData()` e atribui `driverId` a partir de `FirebaseAuth` (arquivo: `lib/features/trip/trip_create.dart`).
+Principais arquivos/pastas relevantes (implementados):
 
-Observações/diags:
-- Para rodar localmente é necessário instalar dependências adicionadas no `pubspec.yaml` (firebase_core, firebase_auth, cloud_firestore):
+- `lib/main.dart` — inicializa o Firebase (usa `lib/firebase_options.dart`).
+- `lib/core/theme/` — `app_colors.dart`, `app_theme.dart` (theming global).
+- `lib/shared/widgets/` — componentes reutilizáveis (ex.: `app_button.dart`, `app_input.dart`, `trip_card.dart`).
+- `lib/shared/models/` — `user.dart`, `trip.dart` (modelos com `fromMap`/`toMap`).
+- `lib/shared/mocks/` — `mock_trips.dart`, `mock_user.dart` (dados de desenvolvimento ainda disponíveis).
+- `lib/shared/repos/trip_repository.dart` — acesso ao Firestore (`watchUpcomingTrips`, `createTrip`, `getTrip`).
+- `lib/services/auth_service.dart` — helpers de autenticação (signIn/signUp/signOut, leitura de `users/{uid}`).
+- `lib/features/auth/login_sheet.dart` — sheet de login/cadastro que usa `AuthService`.
+- `lib/features/home/home_screen.dart` — lista caronas; consome `TripRepository.watchUpcomingTrips()` via `StreamBuilder`.
+- `lib/features/trip/trip_create.dart` — tela de criação de carona (formulário e criação via `TripRepository`).
+- `lib/features/trip/trip_detail.dart` — tela de detalhes da carona.
+
+## 2. O que já está implementado
+
+- Firebase inicializado em `main.dart` com `DefaultFirebaseOptions` (gerado): `firebase_options.dart` existe.
+- Modelos `User` e `Trip` existem em `lib/shared/models/` e possuem `fromMap`/`toMap`.
+- `AuthService` conecta com `firebase_auth` e grava/recupera documentos em `users/{uid}`.
+- `TripRepository` já expõe um stream ordenado por `when` e métodos de criação/consulta.
+- `HomeScreen` apresenta dados vindos do Firestore (ou do emulator) via stream.
+- Telas de criação e detalhe de carona estão implementadas e integradas ao repositório/auth quando aplicável.
+
+## 3. Firestore — coleções e documentos (modelo atual)
+
+Estrutura usada pelo app:
+
+- `users/{userId}` — name, email, avatarUrl, createdAt.
+- `trips/{tripId}` — driverId, driverName, driverAvatarUrl, origin, destination, when (timestamp), whenLabel, seats, note, active.
+- (Opcional) `trips/{tripId}/requests/{requestId}` — para pedidos/solicitações (não implementado no backend ainda).
+
+Índices / consultas importantes:
+
+- O app ordena por `when` (asc) para listar próximas caronas.
+- Filtragens por origem/destino podem exigir índices compostos dependendo das queries futuras.
+
+## 4. Autenticação (estado atual)
+
+- Login com email/senha implementado na UI (`LoginSheet`) usando `AuthService`.
+- Ao cadastrar (signUp) o `AuthService` cria um documento em `users/{uid}` com `name`, `email` e `createdAt`.
+- O app usa o `FirebaseAuth.instance.currentUser` em pontos como `TripCreateScreen` para atribuir `driverId`.
+
+## 5. Segurança e regras Firestore
+
+O sumário continha um exemplo de regras Firestore — ele é um bom ponto de partida. Porém, **não há um arquivo `firestore.rules` versionado no repositório**. Recomendo adicionar as regras de exemplo como um arquivo `firestore.rules` (exemplo abaixo) e depois ajustá-las conforme as regras de negócio:
+
+Exemplo mínimo sugerido (colocar em `firestore.rules`):
+
+```rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /trips/{tripId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.driverId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.driverId == request.auth.uid;
+    }
+  }
+}
+```
+
+Coloque as regras no repositório e depois use `firebase deploy --only firestore:rules` quando estiver pronto.
+
+## 6. Arquivos de configuração do Firebase (existentes / ação recomendada)
+
+- `firebase.json` está presente e contém configurações geradas para o projeto `caronapp-48e5c`.
+- `android/app/google-services.json` já existe no repositório (verifique se é o arquivo correto para o ambiente que você quer usar).
+- `lib/firebase_options.dart` existe e foi gerado pela CLI do Firebase para as plataformas configuradas.
+- Para iOS: ainda é necessário adicionar `GoogleService-Info.plist` manualmente em `ios/Runner/` quando for conectar ao projeto real (não versionar credenciais sensíveis no repo se for público).
+
+## 7. Pendências recomendadas (prioridade prática)
+
+1. Adicionar `firestore.rules` com o exemplo acima e versioná-lo no repo.
+2. Criar (opcional) um `docs/EMULATOR.md` com passos rápidos de como rodar o Firebase Emulator Suite localmente (Auth + Firestore). Exemplo de comandos:
 
 ```bash
 flutter pub get
-```
-
-- É altamente recomendado usar Firebase Emulator Suite (Auth + Firestore) durante desenvolvimento. Caso prefira conectar ao projeto Firebase real, você informou os dados do projeto:
-
-- Project ID: `caronapp-48e5c`
-- Project number: `642631738319`
-
-Se for usar o projeto real, adicione `google-services.json` (Android) e `GoogleService-Info.plist` (iOS) nas pastas apropriadas.
-
-## Como testar rapidamente (modo recomendado: emulator)
-
-1. Inicie o Firebase Emulator:
-
-```bash
 firebase emulators:start --only auth,firestore
-```
-
-2. Rode o app:
-
-```bash
 flutter run
 ```
 
-3. No app: use o fluxo de Signup para criar um usuário (será criado no emulator). Crie uma carona e verifique se ela aparece no `HomeScreen`.
+3. Revisar `android/app/google-services.json` para garantir que é o arquivo apropriado para desenvolvimento; adicionar instrução clara no README sobre credenciais e quando/como adicionar `GoogleService-Info.plist` para iOS.
+4. (Opcional) Adicionar um workflow CI simples para builds em PRs (ex.: `.github/workflows/flutter-ci.yml`) se desejar verificação automática em commits.
+5. Implementar fluxo de requests/pedidos (`trips/{tripId}/requests`) e ajustar regras Firestore para suportar esse caso quando necessário.
 
-## Próximos passos que posso executar agora
+## 8. Telas / UX — o que já existe e próximos ajustes
 
-1. Ajustar tratamento de erros e mensagens amigáveis no `LoginSheet`.
-2. Adicionar testes unitários básicos e um guia passo-a-passo para usar o Emulator no README.
-3. Implementar tela de requests (pedidos de vaga) e regras de segurança mais detalhadas.
+- `TripDetailScreen` (`lib/features/trip/trip_detail.dart`) — implementada, inclui botão "Solicitar vaga" (fluxo de request ainda por implementar).
+- `TripCreateScreen` (`lib/features/trip/trip_create.dart`) — implementada; valida origin/destination, permite seleção de data/hora, número de vagas e cria documento em `trips/` usando `TripRepository`.
+- `LoginSheet` — implementado e integrado ao `AuthService`.
 
-Diga qual desses você quer que eu faça em seguida e eu sigo com as mudanças (posso aplicar o ajuste 1 e 2 automaticamente se autorizar). 
+## 9. Observações operacionais
+
+- A aplicação usa `firebase_core`, `firebase_auth` e `cloud_firestore` — rode `flutter pub get` antes de executar.
+- Recomendo usar o Firebase Emulator Suite para desenvolvimento local (evita custos e facilita testes de regras e auth).
+
+---
+
+Se quiser, eu aplico também os itens da seção "Pendências" automaticamente:
+
+- A: adicionar `firestore.rules` com o snippet acima;
+- B: criar `docs/EMULATOR.md` com instruções passo-a-passo;
+- C: criar um esqueleto `.github/workflows/flutter-ci.yml` (build básico sem emulator).
+
+Diga qual (A/B/C) você quer que eu faça agora. Se preferir só atualizar o sumário, já terminei essa parte.

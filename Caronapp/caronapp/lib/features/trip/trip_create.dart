@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+// map/picker removed — no additional imports needed
 import '../../shared/repos/trip_repository.dart';
+import 'trip_view_model.dart';
 
 class TripCreateScreen extends StatefulWidget {
   const TripCreateScreen({super.key});
@@ -16,6 +17,7 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
   final _originCtrl = TextEditingController();
   final _destinationCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
   DateTime? _when;
   int _seats = 1;
 
@@ -29,7 +31,10 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
     if (date == null) return;
     // Widget may be unmounted while waiting for the next dialog — check mounted
     if (!mounted) return;
-    final time = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 8, minute: 0));
+    final time = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 8, minute: 0),
+    );
     if (time == null) return;
     if (!mounted) return;
     setState(() {
@@ -37,96 +42,153 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
     });
   }
 
-  void _submit() {
-    _submitInternal();
-  }
+  void _submit(TripViewModel viewModel) async {
+    // reset error state before submit
+    if (!_formKey.currentState!.validate() || _when == null) {
+      if (_when == null) {
+        // set error on viewModel for UI
+        viewModel.validate(
+          origin: _originCtrl.text,
+          destination: _destinationCtrl.text,
+          when: _when,
+          seats: _seats,
+        );
+      }
+      return;
+    }
 
-  Future<void> _submitInternal() async {
-    if (!_formKey.currentState!.validate() || _when == null) return;
-    try {
-      final user = fb_auth.FirebaseAuth.instance.currentUser;
-      final driverId = user?.uid ?? 'unknown';
-      final driverName = user?.displayName ?? user?.email?.split('@').first ?? 'Motorista';
-      final data = {
-        'driverId': driverId,
-        'driverName': driverName,
-        'driverAvatarUrl': null,
-        'origin': _originCtrl.text.trim(),
-        'destination': _destinationCtrl.text.trim(),
-        'whenLabel': '${_when!.day.toString().padLeft(2, '0')}/${_when!.month.toString().padLeft(2, '0')} ${_when!.hour.toString().padLeft(2, '0')}:${_when!.minute.toString().padLeft(2, '0')}',
-        'when': Timestamp.fromDate(_when!),
-        'seats': _seats,
-        'note': _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-        'active': true,
-      };
-      final repo = TripRepository();
-      await repo.createTripData(data);
-      if (!mounted) return;
+    double? price;
+    if (_priceCtrl.text.trim().isNotEmpty) {
+      price = double.tryParse(_priceCtrl.text.trim().replaceAll(',', '.'));
+    }
+
+    final ok = await viewModel.createTrip(
+      origin: _originCtrl.text,
+      destination: _destinationCtrl.text,
+      when: _when!,
+      seats: _seats,
+      note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+      price: price,
+    );
+
+    if (!mounted) return;
+    if (ok) {
       Navigator.of(context).pop();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao criar carona: $e')));
+    } else {
+      final err = viewModel.errorMessage ?? 'Erro ao criar carona';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.sky,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.navy),
-        title: Text('Criar carona', style: const TextStyle(color: AppColors.navy)),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _originCtrl,
-                decoration: const InputDecoration(labelText: 'Origem'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Informe origem' : null,
+    return ChangeNotifierProvider(
+      create: (_) => TripViewModel(repo: TripRepository()),
+      child: Consumer<TripViewModel>(
+        builder: (context, vm, _) {
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: AppColors.sky,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: AppColors.navy),
+              title: Text(
+                'Criar carona',
+                style: const TextStyle(color: AppColors.navy),
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _destinationCtrl,
-                decoration: const InputDecoration(labelText: 'Destino'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Informe destino' : null,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _pickDateTime,
-                      child: Text(_when == null
-                          ? 'Escolher data e hora'
-                          : '${_when!.day.toString().padLeft(2, '0')}/${_when!.month.toString().padLeft(2, '0')}/${_when!.year} ${_when!.hour.toString().padLeft(2, '0')}:${_when!.minute.toString().padLeft(2, '0')}'),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _originCtrl,
+                      decoration: const InputDecoration(labelText: 'Origem'),
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Informe origem' : null,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  DropdownButton<int>(
-                    value: _seats,
-                    items: List.generate(6, (i) => i + 1).map((v) => DropdownMenuItem(value: v, child: Text('$v'))).toList(),
-                    onChanged: (v) => setState(() => _seats = v ?? 1),
-                  )
-                ],
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _destinationCtrl,
+                      decoration: const InputDecoration(labelText: 'Destino'),
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Informe destino' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _pickDateTime,
+                            child: Text(
+                              _when == null
+                                  ? 'Escolher data e hora'
+                                  : '${_when!.day.toString().padLeft(2, '0')}/${_when!.month.toString().padLeft(2, '0')}/${_when!.year} ${_when!.hour.toString().padLeft(2, '0')}:${_when!.minute.toString().padLeft(2, '0')}',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        DropdownButton<int>(
+                          value: _seats,
+                          items: List.generate(6, (i) => i + 1)
+                              .map(
+                                (v) => DropdownMenuItem(
+                                  value: v,
+                                  child: Text('$v'),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) => setState(() => _seats = v ?? 1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _noteCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Observação (opcional)',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _priceCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Preço (ex: 12.50) - opcional',
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Spacer(),
+                    vm.state == TripState.loading
+                        ? const SizedBox(
+                            height: 48,
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        : ElevatedButton(
+                            onPressed: () => _submit(vm),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.orange,
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                            child: const Text('Publicar carona'),
+                          ),
+                    if (vm.state == TripState.error &&
+                        vm.errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        vm.errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _noteCtrl,
-                decoration: const InputDecoration(labelText: 'Observação (opcional)'),
-              ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.orange, minimumSize: const Size.fromHeight(48)),
-                child: const Text('Publicar carona'),
-              )
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
